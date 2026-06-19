@@ -5,9 +5,8 @@ TagManager:
   serializedVersion: 3
   tags:
   - Jogador
-  - Piso
-  - Parede
   - "Obst\xE1culo"
+  - Terreno
   layers:
   - Default
   - TransparentFX
@@ -15,7 +14,7 @@ TagManager:
   - 
   - Water
   - UI
-  - 
+  - Terreno
   - 
   - 
   - 

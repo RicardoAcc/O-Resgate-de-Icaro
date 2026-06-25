@@ -20,7 +20,6 @@ public class JogadorMoveScript : MonoBehaviour
     private float lastJumpTime = -999f;
     public float groundIgnoreTimeAfterJump = 0.08f;
     public float dashDuration = 0.4f;
-    public int grabDuration = 4;
     public Vector2 moveInput;
     public Vector2 directionInput;
     public Vector2 jumpInput;

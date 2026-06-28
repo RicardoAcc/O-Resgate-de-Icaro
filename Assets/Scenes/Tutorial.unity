@@ -2219,6 +2219,10 @@ PrefabInstance:
       propertyPath: sceneName
       value: Sala Direita
       objectReference: {fileID: 0}
+    - target: {fileID: 7057990388452210131, guid: cb264033d1ceaa84f83b988992d36883, type: 3}
+      propertyPath: targetSpawnPointID
+      value: Esquerda
+      objectReference: {fileID: 0}
     - target: {fileID: 7925824775217490959, guid: cb264033d1ceaa84f83b988992d36883, type: 3}
       propertyPath: spawnID
       value: Direita

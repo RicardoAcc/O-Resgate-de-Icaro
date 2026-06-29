@@ -36,7 +36,7 @@ public class JogadorMoveScript : MonoBehaviour
     private bool grabbingPressed = false;
     public bool canGrab = false;
     public bool canDash = true;
-    public bool canJump = true;
+    public bool canDoubleJump = true;
     public float jumpBufferTime = 0.3f;
     private float jumpBufferCounter = 0f;
     private bool jumpHeld = false;
@@ -84,6 +84,7 @@ public class JogadorMoveScript : MonoBehaviour
         {
             isDashing = false;
             canDash = true;
+            canDoubleJump = true;
 
             if (jumpBufferCounter > 0f && !isGrabbing && !isDashing)
             {
@@ -154,11 +155,6 @@ public class JogadorMoveScript : MonoBehaviour
         {
             isGrounded();
             isTouchingWall();
-        }
-
-        if (collision.gameObject.CompareTag("Obstáculo"))
-        {
-            // perder vida e voltar pro começo da cena
         }
     }
 
@@ -273,6 +269,11 @@ public class JogadorMoveScript : MonoBehaviour
             else if (isGrounded() && rb.linearVelocity.y <= 0.05f)
             {
                 DoJump();
+            }
+            else if (canDoubleJump && !isGrounded() && !isWallJumping)
+            {
+                DoJump();
+                canDoubleJump = false;
             }
             else
             {
@@ -412,6 +413,19 @@ public class JogadorMoveScript : MonoBehaviour
         rb.linearVelocity = Vector2.zero;
     }
 
-    
+    public bool IsDashing()
+    {
+        return isDashing;
+    }
+
+    public void ResetPlayerState()
+    {
+        isDashing = false;
+        isGrabbing = false;
+        isJumping = false;
+        isWallJumping = false;
+        rb.gravityScale = gravityForce;
+        rb.linearVelocity = Vector2.zero;
+    }
     
 }

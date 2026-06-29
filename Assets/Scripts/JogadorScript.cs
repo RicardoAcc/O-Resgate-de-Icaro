@@ -3,6 +3,7 @@ using UnityEngine;
 public class JogadorScript : MonoBehaviour
 {
     public static JogadorScript instance;
+    public JogadorMoveScript jogadorMoveScript;
     
     private void Awake()
     {
@@ -15,5 +16,7 @@ public class JogadorScript : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+        jogadorMoveScript = GetComponent<JogadorMoveScript>();
     }
 }

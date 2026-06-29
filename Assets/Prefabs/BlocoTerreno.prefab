@@ -10,11 +10,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2055758717994252207, guid: fc03b051c96ce547b8fb1d94b24478f7, type: 3}
       propertyPath: m_LocalScale.x
-      value: 2.6771326
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: 2055758717994252207, guid: fc03b051c96ce547b8fb1d94b24478f7, type: 3}
       propertyPath: m_LocalScale.y
-      value: 2.0959065
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2055758717994252207, guid: fc03b051c96ce547b8fb1d94b24478f7, type: 3}
       propertyPath: m_LocalPosition.x
@@ -58,7 +58,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8744954879853100811, guid: fc03b051c96ce547b8fb1d94b24478f7, type: 3}
       propertyPath: m_Name
-      value: Terreno (1) Variant
+      value: BlocoTerreno
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

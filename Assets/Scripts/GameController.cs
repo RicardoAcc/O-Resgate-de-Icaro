@@ -1,10 +1,14 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Collections.Generic;
 
 public class GameController : MonoBehaviour
 {
     public static GameController instance;
     public string spawnPointID;
+    private string[] playableScenes = { "Sala Direita", "Sala Esquerda", "Sala Superior" };
+    private string[] gods = { "Hefesto", "Hécate", "Hipnos", null };
+    public Dictionary<string, string> sceneToGod = new Dictionary<string, string>();
 
     private void Awake()
     {
@@ -32,20 +36,37 @@ public class GameController : MonoBehaviour
         if (string.IsNullOrEmpty(spawnPointID))
             return;
             
-        
         SpawnPoint[] spawnPoints = FindObjectsByType<SpawnPoint>();
 
-        Debug.Log("Spawn Point ID: " + spawnPointID);
         foreach (SpawnPoint spawnPoint in spawnPoints)
         {
-            Debug.Log("Checking Spawn Point: " + spawnPoint.spawnID);
             if (spawnPoint.spawnID == spawnPointID)
             {
                 JogadorScript.instance.transform.position = spawnPoint.transform.position;
+                JogadorScript.instance.jogadorMoveScript.ResetPlayerState();
                 break;
             }
         }
 
         spawnPointID = null;
+    }
+
+    private void chooseGodForScene(string sceneName)
+    {
+        if (sceneToGod.ContainsKey(sceneName))
+            return;
+
+        int randomIndex = Random.Range(0, gods.Length - 2);
+        sceneToGod[sceneName] = gods[randomIndex];
+    }
+
+    public string GetGodForScene(string sceneName)
+    {
+        if (!sceneToGod.ContainsKey(sceneName))
+        {
+            chooseGodForScene(sceneName);
+        }
+
+        return sceneToGod[sceneName];
     }
 }

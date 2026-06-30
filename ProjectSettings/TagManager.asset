@@ -8,6 +8,7 @@ TagManager:
   - "Obst\xE1culo"
   - Terreno
   - Morte
+  - FogoHefesto
   layers:
   - Default
   - TransparentFX

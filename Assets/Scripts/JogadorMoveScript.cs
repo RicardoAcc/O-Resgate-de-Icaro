@@ -29,6 +29,7 @@ public class JogadorMoveScript : MonoBehaviour
     public float wallJumpForceX = 8f;
     public float wallJumpForceY = 7f;
     public float wallCheckDistance = 0.3f;
+    private bool grounded;
     public bool isDashing;
     public bool isGrabbing;
     public bool isFacingRight = true;
@@ -36,12 +37,13 @@ public class JogadorMoveScript : MonoBehaviour
     private bool grabbingPressed = false;
     public bool canGrab = false;
     public bool canDash = true;
-    public bool canJump = true;
+    public bool canDoubleJump = true;
     public float jumpBufferTime = 0.3f;
     private float jumpBufferCounter = 0f;
     private bool jumpHeld = false;
     public float gravityForce = 1.5f;
     public float lowGravityForce = 0.5f;
+    public bool isSleeping = false;
     public LayerMask terrainLayer;
     public Rigidbody2D rb;
     public BoxCollider2D col;
@@ -64,6 +66,7 @@ public class JogadorMoveScript : MonoBehaviour
         HandleGround();
         isTouchingWall();
         Move();
+        HandleSleepState();
     }
 
     public bool isGrounded()
@@ -78,12 +81,13 @@ public class JogadorMoveScript : MonoBehaviour
 
     private void HandleGround()
     {
-        bool grounded = isGrounded();
+        grounded = isGrounded();
 
         if (grounded && rb.linearVelocity.y <= 0.05f)
         {
             isDashing = false;
             canDash = true;
+            canDoubleJump = true;
 
             if (jumpBufferCounter > 0f && !isGrabbing && !isDashing)
             {
@@ -154,11 +158,6 @@ public class JogadorMoveScript : MonoBehaviour
         {
             isGrounded();
             isTouchingWall();
-        }
-
-        if (collision.gameObject.CompareTag("Obstáculo"))
-        {
-            // perder vida e voltar pro começo da cena
         }
     }
 
@@ -237,6 +236,11 @@ public class JogadorMoveScript : MonoBehaviour
 
     private void Move()
     {
+        if (isSleeping)
+        {
+            return;
+        }
+
         if (!isGrabbing && !isDashing && !isWallJumping)
         {
             rb.linearVelocity = new Vector2(moveInput.x * moveSpeed, rb.linearVelocity.y);
@@ -273,6 +277,11 @@ public class JogadorMoveScript : MonoBehaviour
             else if (isGrounded() && rb.linearVelocity.y <= 0.05f)
             {
                 DoJump();
+            }
+            else if (canDoubleJump && !isGrounded() && !isWallJumping)
+            {
+                DoJump();
+                canDoubleJump = false;
             }
             else
             {
@@ -412,6 +421,43 @@ public class JogadorMoveScript : MonoBehaviour
         rb.linearVelocity = Vector2.zero;
     }
 
+    public bool IsDashing()
+    {
+        return isDashing;
+    }
+
+    public void ResetPlayerState()
+    {
+        isDashing = false;
+        isGrabbing = false;
+        isJumping = false;
+        isWallJumping = false;
+        rb.gravityScale = gravityForce;
+        rb.linearVelocity = Vector2.zero;
+    }
     
-    
+    private void HandleSleepState()
+    {
+        if (isSleeping)
+        {
+            rb.gravityScale = gravityForce;
+            moveAction.action.Disable();
+            jumpAction.action.Disable();
+            dashAction.action.Disable();
+            grabAction.action.Disable();
+
+            moveInput = Vector2.zero;
+            if(grounded)
+            {
+                rb.linearVelocity = Vector2.zero;
+            }
+        }
+        else
+        {
+            moveAction.action.Enable();
+            jumpAction.action.Enable();
+            dashAction.action.Enable();
+            grabAction.action.Enable();
+        }
+    }
 }

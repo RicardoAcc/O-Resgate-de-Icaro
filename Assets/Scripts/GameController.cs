@@ -1,19 +1,27 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Collections.Generic;
 
 public class GameController : MonoBehaviour
 {
     public static GameController instance;
+
     public string spawnPointID;
+
+    private bool isLoadingScene;
+
+    private string[] playableScenes = { "Sala Direita", "Sala Esquerda", "Sala Superior" };
+    private string[] gods = { "Hefesto", "Hecate", "Hipnos" };
+
+    public Dictionary<string, string> sceneToGod = new Dictionary<string, string>();
 
     private void Awake()
     {
-        if(instance == null)
+        if (instance == null)
         {
             instance = this;
             DontDestroyOnLoad(gameObject);
-
-            SceneManager.sceneLoaded += OnSceneLoaded;
         }
         else
         {
@@ -23,29 +31,104 @@ public class GameController : MonoBehaviour
 
     public void LoadScene(string sceneName, string targetSpawnPointID)
     {
-        spawnPointID = targetSpawnPointID;
-        SceneManager.LoadScene(sceneName);
+        if (isLoadingScene)
+            return;
+
+        StartCoroutine(LoadSceneRoutine(sceneName, targetSpawnPointID));
     }
 
-    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    private IEnumerator LoadSceneRoutine(string sceneName, string targetSpawnPointID)
     {
-        if (string.IsNullOrEmpty(spawnPointID))
-            return;
-            
-        
-        SpawnPoint[] spawnPoints = FindObjectsByType<SpawnPoint>();
+        isLoadingScene = true;
+        spawnPointID = targetSpawnPointID;
 
-        Debug.Log("Spawn Point ID: " + spawnPointID);
-        foreach (SpawnPoint spawnPoint in spawnPoints)
+        if (ScreenFader.instance != null)
+            yield return ScreenFader.instance.FadeOut();
+
+        AsyncOperation operation = SceneManager.LoadSceneAsync(sceneName);
+
+        while (!operation.isDone)
         {
-            Debug.Log("Checking Spawn Point: " + spawnPoint.spawnID);
-            if (spawnPoint.spawnID == spawnPointID)
-            {
-                JogadorScript.instance.transform.position = spawnPoint.transform.position;
-                break;
-            }
+            yield return null;
         }
 
-        spawnPointID = null;
+        yield return null;
+
+        InitializeSceneAfterLoad();
+
+        yield return new WaitForFixedUpdate();
+
+        Physics2D.SyncTransforms();
+
+        InitializeSceneAfterLoad();
+
+        yield return null;
+
+        if (ScreenFader.instance != null)
+            yield return ScreenFader.instance.FadeIn();
+
+        isLoadingScene = false;
+    }
+
+    private void InitializeSceneAfterLoad()
+    {
+        Transform player = JogadorScript.instance != null
+            ? JogadorScript.instance.transform
+            : null;
+
+        if (player == null)
+            return;
+
+        if (!string.IsNullOrEmpty(spawnPointID))
+        {
+            SpawnPoint[] spawnPoints = FindObjectsByType<SpawnPoint>(FindObjectsInactive.Exclude);
+
+            foreach (SpawnPoint spawnPoint in spawnPoints)
+            {
+                if (spawnPoint.spawnID == spawnPointID)
+                {
+                    player.position = spawnPoint.transform.position;
+
+                    if (JogadorScript.instance.jogadorMoveScript != null)
+                        JogadorScript.instance.jogadorMoveScript.ResetPlayerState();
+
+                    break;
+                }
+            }
+
+            spawnPointID = null;
+        }
+
+        Physics2D.SyncTransforms();
+
+        Collider2D bounds = null;
+
+        CameraBoundsMarker boundsMarker = FindAnyObjectByType<CameraBoundsMarker>();
+
+        if (boundsMarker != null)
+            bounds = boundsMarker.bounds;
+
+        if (CameraController.instance != null)
+        {
+            CameraController.instance.InitializeForScene(player, bounds);
+        }
+    }
+
+    private void chooseGodForScene(string sceneName)
+    {
+        if (sceneToGod.ContainsKey(sceneName))
+            return;
+
+        int randomIndex = Random.Range(0, gods.Length);
+        sceneToGod[sceneName] = gods[randomIndex];
+    }
+
+    public string GetGodForScene(string sceneName)
+    {
+        if (!sceneToGod.ContainsKey(sceneName))
+        {
+            chooseGodForScene(sceneName);
+        }
+        return sceneToGod[sceneName];
     }
 }

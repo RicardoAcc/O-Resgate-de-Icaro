@@ -130,6 +130,8 @@ public class JogadorMoveScript : MonoBehaviour
         if(touchingLeft || touchingRight)
         {
             canGrab = true;
+            canDoubleJump = true;
+            canDash = true;
             DoGrab();
             return true;
         }

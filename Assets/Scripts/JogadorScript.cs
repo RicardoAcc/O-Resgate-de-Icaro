@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Collections.Generic;
 
 public class JogadorScript : MonoBehaviour
 {
@@ -12,6 +13,7 @@ public class JogadorScript : MonoBehaviour
     public string ultimoSpawnPoint = "";
     private float inicioInvulnerabilidade = 0;
     public float tempoInvulnerabilidade = 1f;
+    private HashSet<string> coletaveisColetados = new HashSet<string>();
     
     private void Awake()
     {
@@ -48,6 +50,36 @@ public class JogadorScript : MonoBehaviour
         return vidas;
     }
 
+    public bool ColetavelJaFoiColetado(string idColetavel)
+    {
+        if (string.IsNullOrWhiteSpace(idColetavel))
+        {
+            return false;
+        }
+
+        return coletaveisColetados.Contains(idColetavel);
+    }
+
+    public void RegistrarColetavel(string idColetavel)
+    {
+        if (string.IsNullOrWhiteSpace(idColetavel))
+        {
+            return;
+        }
+
+        if (coletaveisColetados.Contains(idColetavel))
+        {
+            return;
+        }
+
+        coletaveisColetados.Add(idColetavel);
+    }
+
+    public void LimparColetaveisColetados()
+    {
+        coletaveisColetados.Clear();
+    }
+
     private void ResetaJogador()
     {
         temDash = false;
@@ -76,6 +108,11 @@ public class JogadorScript : MonoBehaviour
             GameController.instance.ResetaCena(ultimoSpawnPoint);
             inicioInvulnerabilidade = Time.time;
         }
+    }
+
+    public void AumentaVida()
+    {
+        vidas += 1;
     }
 
 }

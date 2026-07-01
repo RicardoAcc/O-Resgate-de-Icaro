@@ -1151,8 +1151,8 @@ Transform:
   m_GameObject: {fileID: 713690747}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.3, y: 0.01, z: 0}
-  m_LocalScale: {x: 0.45694, y: 1, z: 1}
+  m_LocalPosition: {x: -0.3, y: 0, z: 0}
+  m_LocalScale: {x: 0.5, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1328134169}
@@ -1812,6 +1812,14 @@ PrefabInstance:
       propertyPath: sceneName
       value: Sala Superior
       objectReference: {fileID: 0}
+    - target: {fileID: 7057990388452210131, guid: cb264033d1ceaa84f83b988992d36883, type: 3}
+      propertyPath: targetSpawnPointID
+      value: Fundo
+      objectReference: {fileID: 0}
+    - target: {fileID: 7925824775217490959, guid: cb264033d1ceaa84f83b988992d36883, type: 3}
+      propertyPath: spawnID
+      value: Topo
+      objectReference: {fileID: 0}
     - target: {fileID: 8018618746972206445, guid: cb264033d1ceaa84f83b988992d36883, type: 3}
       propertyPath: m_LocalPosition.x
       value: -9.5
@@ -2219,8 +2227,8 @@ Transform:
   m_GameObject: {fileID: 1814646957}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.3, y: 0.05, z: 0}
-  m_LocalScale: {x: 0.45694, y: 1, z: 1}
+  m_LocalPosition: {x: 0.3, y: 0, z: 0}
+  m_LocalScale: {x: 0.5, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1328134169}

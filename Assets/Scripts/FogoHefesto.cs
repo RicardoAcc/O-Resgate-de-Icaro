@@ -6,6 +6,7 @@ public class FogoHefesto : MonoBehaviour
     private bool canShoot = true;
     public float shootCooldown = 3f;
     public float shootSpeed = 2f;
+    public float fireLifeTime = 2f;
     public GameObject fireballPrefab;
 
     void FixedUpdate()
@@ -24,6 +25,7 @@ public class FogoHefesto : MonoBehaviour
         {
             GameObject fireball = Instantiate(fireballPrefab, transform.position, Quaternion.identity);
             Rigidbody2D rb = fireball.GetComponent<Rigidbody2D>();
+            fireball.GetComponent<LavaHefesto>().lifeTime = fireLifeTime;
             rb.linearVelocity = new Vector2(0f, shootSpeed);
             canShoot = false;
             Invoke("ResetShoot", shootCooldown);

@@ -1,7 +1,5 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Controls;
-using UnityEngine.SceneManagement;
 using System.Collections;
 
 public class JogadorMoveScript : MonoBehaviour
@@ -11,6 +9,7 @@ public class JogadorMoveScript : MonoBehaviour
     public InputActionReference dashAction;
     public InputActionReference grabAction;
     public float moveSpeed = 5f;
+    public float maxFallSpeed = -10f;
     public float jumpForce = 5f;
     public float dashSpeed = 10f;
     public float grappleSpeed = 3f;
@@ -43,14 +42,21 @@ public class JogadorMoveScript : MonoBehaviour
     private bool jumpHeld = false;
     public float gravityForce = 1.5f;
     public float lowGravityForce = 0.5f;
+    private float currentGravityScale;
     public bool isSleeping = false;
     public LayerMask terrainLayer;
     public Rigidbody2D rb;
     public BoxCollider2D col;
+    private JogadorScript jogadorScript;
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         col = GetComponent<BoxCollider2D>();
+        jogadorScript = GetComponent<JogadorScript>();
+
+        currentGravityScale = gravityForce;
+        rb.gravityScale = 0f;
     }
 
     void Update()
@@ -67,6 +73,34 @@ public class JogadorMoveScript : MonoBehaviour
         isTouchingWall();
         Move();
         HandleSleepState();
+        ApplyManualGravity();
+    }
+
+    private void SetGravity(float value)
+    {
+        currentGravityScale = value;
+
+        rb.gravityScale = 0f;
+    }
+
+    private void ApplyManualGravity()
+    {
+        if (isGrabbing || isDashing)
+        {
+            return;
+        }
+
+        if (isSleeping && grounded)
+        {
+            return;
+        }
+
+        float gravity = Physics2D.gravity.y * currentGravityScale;
+        float newYVelocity = rb.linearVelocity.y + gravity * Time.fixedDeltaTime;
+
+        newYVelocity = Mathf.Max(newYVelocity, maxFallSpeed);
+
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, newYVelocity);
     }
 
     public bool isGrounded()
@@ -118,21 +152,23 @@ public class JogadorMoveScript : MonoBehaviour
         bool touchingLeft = CheckWallBox(Vector2.left);
         bool touchingRight = CheckWallBox(Vector2.right);
 
-        if(touchingRight)
+        if (touchingRight)
         {
             isGrabbingRight = true;
         }
-        else if(touchingLeft)
+        else if (touchingLeft)
         {
             isGrabbingRight = false;
         }
 
-        if(touchingLeft || touchingRight)
+        if (touchingLeft || touchingRight)
         {
             canGrab = true;
             canDoubleJump = true;
             canDash = true;
+
             DoGrab();
+
             return true;
         }
         else
@@ -143,13 +179,14 @@ public class JogadorMoveScript : MonoBehaviour
             {
                 isGrabbing = false;
                 isGrabbingRight = false;
-                rb.gravityScale = gravityForce;
+                SetGravity(gravityForce);
 
                 if (rb.linearVelocity.y > 0)
                 {
                     rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y / 2f);
                 }
             }
+
             return false;
         }
     }
@@ -165,7 +202,7 @@ public class JogadorMoveScript : MonoBehaviour
 
     public void OnCollisionExit2D(Collision2D collision)
     {
-        if(collision.gameObject.CompareTag("Terreno"))
+        if (collision.gameObject.CompareTag("Terreno"))
         {
             isGrounded();
             isTouchingWall();
@@ -183,6 +220,7 @@ public class JogadorMoveScript : MonoBehaviour
         jumpAction.action.performed += OnJump;
         dashAction.action.performed += OnDash;
         grabAction.action.performed += OnGrab;
+
         moveAction.action.canceled += OnMove;
         jumpAction.action.canceled += OnJump;
         grabAction.action.canceled += OnGrab;
@@ -199,6 +237,7 @@ public class JogadorMoveScript : MonoBehaviour
         jumpAction.action.performed -= OnJump;
         dashAction.action.performed -= OnDash;
         grabAction.action.performed -= OnGrab;
+
         moveAction.action.canceled -= OnMove;
         jumpAction.action.canceled -= OnJump;
         grabAction.action.canceled -= OnGrab;
@@ -207,6 +246,7 @@ public class JogadorMoveScript : MonoBehaviour
     private void OnMove(InputAction.CallbackContext context)
     {
         directionInput = context.ReadValue<Vector2>();
+
         if (directionInput.x > 0)
         {
             moveInput.x = 1;
@@ -247,9 +287,10 @@ public class JogadorMoveScript : MonoBehaviour
         {
             rb.linearVelocity = new Vector2(moveInput.x * moveSpeed, rb.linearVelocity.y);
         }
+
         if (isGrabbing)
         {
-            rb.linearVelocity = new Vector2(0, moveInput.y * grappleSpeed);
+            rb.linearVelocity = new Vector2(0f, moveInput.y * grappleSpeed);
         }
     }
 
@@ -262,14 +303,14 @@ public class JogadorMoveScript : MonoBehaviour
 
             if (isGrabbing)
             {
-                rb.gravityScale = lowGravityForce;
+                SetGravity(lowGravityForce);
+
                 isJumping = true;
                 isDashing = false;
                 isGrabbing = false;
                 isWallJumping = true;
 
                 float direction = isGrabbingRight ? -1f : 1f;
-
 
                 rb.linearVelocity = new Vector2(direction * wallJumpForceX, wallJumpForceY);
 
@@ -280,7 +321,7 @@ public class JogadorMoveScript : MonoBehaviour
             {
                 DoJump();
             }
-            else if (canDoubleJump && !isGrounded() && !isWallJumping)
+            else if (canDoubleJump && !isGrounded() && !isWallJumping && jogadorScript.GetTemPuloDuplo())
             {
                 DoJump();
                 canDoubleJump = false;
@@ -293,10 +334,12 @@ public class JogadorMoveScript : MonoBehaviour
         else if (context.canceled)
         {
             jumpHeld = false;
-            if(isJumping && Time.time - jumpInitialTime >= jumpMinDuration)
+
+            if (isJumping && Time.time - jumpInitialTime >= jumpMinDuration)
             {
                 ResetJump();
-            }else if(isJumping)
+            }
+            else if (isJumping)
             {
                 CancelInvoke("ResetJump");
                 Invoke("ResetJump", jumpMinDuration - (Time.time - jumpInitialTime));
@@ -309,7 +352,8 @@ public class JogadorMoveScript : MonoBehaviour
         jumpInitialTime = Time.time;
         lastJumpTime = Time.time;
 
-        rb.gravityScale = lowGravityForce;
+        SetGravity(lowGravityForce);
+
         isJumping = true;
         isDashing = false;
         isGrabbing = false;
@@ -321,7 +365,7 @@ public class JogadorMoveScript : MonoBehaviour
 
         CancelInvoke("ResetJump");
 
-        if(jumpHeld)
+        if (jumpHeld)
         {
             Invoke("ResetJump", jumpDuration);
         }
@@ -339,7 +383,8 @@ public class JogadorMoveScript : MonoBehaviour
         }
 
         isJumping = false;
-        rb.gravityScale = gravityForce;
+        SetGravity(gravityForce);
+
         if (rb.linearVelocity.y > 0)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
@@ -348,7 +393,7 @@ public class JogadorMoveScript : MonoBehaviour
 
     private void ResetWallJump()
     {
-        if(isWallJumping)
+        if (isWallJumping)
         {
             isWallJumping = false;
         }
@@ -356,14 +401,22 @@ public class JogadorMoveScript : MonoBehaviour
 
     private void OnDash(InputAction.CallbackContext context)
     {
+        if (!jogadorScript.GetTemDash())
+        {
+            return;
+        }
+
         if (canDash)
         {
-            rb.gravityScale = 0;
+            SetGravity(0f);
+
             canDash = false;
             isDashing = true;
             isJumping = false;
             isGrabbing = false;
+
             rb.linearVelocity = new Vector2(directionInput.x * dashSpeed, directionInput.y * dashSpeed);
+
             StartCoroutine(ResetDashAfterTime(directionInput));
         }
     }
@@ -376,42 +429,54 @@ public class JogadorMoveScript : MonoBehaviour
 
     private void ResetDash(Vector2 direction)
     {
-        if(isDashing)
+        if (isDashing)
         {
             isDashing = false;
-            rb.gravityScale = gravityForce;
+            SetGravity(gravityForce);
+
             if (moveInput.x == 0)
             {
-                rb.linearVelocity = new Vector2(0, 0);
-            }else
+                rb.linearVelocity = Vector2.zero;
+            }
+            else
             {
                 rb.linearVelocity = new Vector2(direction.x * moveSpeed, direction.y * moveSpeed);
             }
         }
     }
 
-
     private void OnGrab(InputAction.CallbackContext context)
     {
-        if(context.performed)
+        if (!jogadorScript.GetTemEscalada())
+        {
+            return;
+        }
+
+        if (context.performed)
         {
             grabbingPressed = true;
         }
-        else if(context.canceled)
+        else if (context.canceled)
         {
             grabbingPressed = false;
-            if(isGrabbing)
+
+            if (isGrabbing)
             {
                 isGrabbing = false;
                 isGrabbingRight = false;
-                rb.gravityScale = gravityForce;
+                SetGravity(gravityForce);
             }
         }
     }
 
     private void DoGrab()
     {
-        if(!grabbingPressed || isWallJumping)
+        if (!grabbingPressed || isWallJumping)
+        {
+            return;
+        }
+
+        if (isGrabbing)
         {
             return;
         }
@@ -419,7 +484,8 @@ public class JogadorMoveScript : MonoBehaviour
         isGrabbing = true;
         isJumping = false;
         isDashing = false;
-        rb.gravityScale = 0;
+
+        SetGravity(0f);
         rb.linearVelocity = Vector2.zero;
     }
 
@@ -434,22 +500,24 @@ public class JogadorMoveScript : MonoBehaviour
         isGrabbing = false;
         isJumping = false;
         isWallJumping = false;
-        rb.gravityScale = gravityForce;
+
+        SetGravity(gravityForce);
+
         rb.linearVelocity = Vector2.zero;
     }
-    
+
     private void HandleSleepState()
     {
         if (isSleeping)
         {
-            rb.gravityScale = gravityForce;
             moveAction.action.Disable();
             jumpAction.action.Disable();
             dashAction.action.Disable();
             grabAction.action.Disable();
 
             moveInput = Vector2.zero;
-            if(grounded)
+
+            if (grounded)
             {
                 rb.linearVelocity = Vector2.zero;
             }

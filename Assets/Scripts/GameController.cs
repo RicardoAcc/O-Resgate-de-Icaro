@@ -88,6 +88,7 @@ public class GameController : MonoBehaviour
                 if (spawnPoint.spawnID == spawnPointID)
                 {
                     player.position = spawnPoint.transform.position;
+                    JogadorScript.instance.ultimoSpawnPoint = spawnPointID;
 
                     if (JogadorScript.instance.jogadorMoveScript != null)
                         JogadorScript.instance.jogadorMoveScript.ResetPlayerState();
@@ -130,5 +131,16 @@ public class GameController : MonoBehaviour
             chooseGodForScene(sceneName);
         }
         return sceneToGod[sceneName];
+    }
+
+    public void ResetaTodasCenas()
+    {
+        LoadScene("Tutorial", "Inicio");
+        sceneToGod.Clear();
+    }
+
+    public void ResetaCena(string SpawnPointName)
+    {
+        LoadScene(SceneManager.GetActiveScene().name, SpawnPointName);
     }
 }

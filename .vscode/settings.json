@@ -67,6 +67,6 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "O Resgate de Ícaro.slnx",
+    "dotnet.defaultSolution": "O-Resgate-de-Icaro.slnx",
     "dotnet.enableWorkspaceBasedDevelopment": false
 }
